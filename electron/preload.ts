@@ -108,6 +108,7 @@ contextBridge.exposeInMainWorld('mcp', {
 contextBridge.exposeInMainWorld('git', {
   info: (repoPath: string) => ipcRenderer.invoke('git:info', repoPath),
   status: (repoPath: string) => ipcRenderer.invoke('git:status', repoPath),
+  diffStats: (repoPath: string) => ipcRenderer.invoke('git:diffStats', repoPath),
   clone: (cloneUrl: string, repoName: string, parentDir?: string) =>
     ipcRenderer.invoke('git:clone', cloneUrl, repoName, parentDir),
   pickRepoFolder: () => ipcRenderer.invoke('dialog:pickRepoFolder'),

@@ -7,6 +7,7 @@ import MCPPanel from './MCPPanel'
 import SettingsPanel from './SettingsPanel'
 import UserMenu from './UserMenu'
 import RepoActionsBar from './RepoActionsBar'
+import RepoStatusPanel from './RepoStatusPanel'
 import { useGitHub } from '../hooks/useGitHub'
 import { useGitlab } from '../hooks/useGitlab'
 import { GridLayout, Workspace } from '../types'
@@ -75,6 +76,10 @@ export default function Sidebar({
   const [joinConnected, setJoinConnected] = useState(terminalJoinService.isConnected)
   const [, forceUpdate] = useState(0)
   const joinInputRef = useRef<HTMLInputElement>(null)
+  const [filesOpen, setFilesOpen] = useState(false)
+  // Close the files popover whenever the active tab's repo changes — the
+  // panel's data is path-bound and would briefly show stale info otherwise.
+  useEffect(() => { setFilesOpen(false) }, [repoPath])
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? '')
@@ -431,6 +436,34 @@ export default function Sidebar({
           <button className="sidebar-label sidebar-repo-link">Link repo</button>
         )}
       </div>
+
+      {/* Files overview — popover panel listing changed files in the linked repo */}
+      {repoPath && (
+        <div className="sidebar-item-panel" style={{ position: 'relative' }}>
+          <button
+            className={`sidebar-item${filesOpen ? ' active' : ''}`}
+            onClick={() => setFilesOpen(v => !v)}
+            title="Files changed in linked repo"
+          >
+            <span className="sidebar-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 2h6l3 3v9H3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
+                <path d="M9 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                <path d="M5 9h6M5 11.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <span className="sidebar-label">Files</span>
+          </button>
+          {filesOpen && (
+            <div style={{ position: 'absolute', top: 0, left: 'calc(100% + 4px)', zIndex: 200 }}>
+              <RepoStatusPanel
+                localPath={repoPath}
+                onClose={() => setFilesOpen(false)}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Actions bar — sección D: último run del repo activo */}
       {expanded && repoPath && repoCi && (

@@ -234,6 +234,7 @@ declare global {
         ahead: number
         behind: number
       }>
+      diffStats: (repoPath: string) => Promise<Record<string, { added: number; deleted: number }>>
       clone: (cloneUrl: string, repoName: string, parentDir?: string) => Promise<{
         ok: boolean
         path?: string

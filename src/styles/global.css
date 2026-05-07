@@ -6101,12 +6101,27 @@ button.ci-badge:hover {
 }
 
 .rsp-file-path {
+  flex: 1;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 11px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.rsp-file-stats {
+  display: flex;
+  gap: 4px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.rsp-stat-added { color: #22c55e; }
+.rsp-stat-deleted { color: #ef4444; }
+.rsp-stat-new {
+  color: #888;
+  font-style: italic;
 }
 
 .rsp-clean {

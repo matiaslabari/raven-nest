@@ -184,6 +184,37 @@ ipcMain.handle('git:status', (_event, repoPath: string) => {
   return { files, ahead: isNaN(ahead) ? 0 : ahead, behind: isNaN(behind) ? 0 : behind }
 })
 
+// Per-file added/deleted line counts vs HEAD (covers both staged + unstaged
+// tracked changes). Untracked files don't appear here — the sidebar overview
+// shows them with a "new" badge instead of stats. Binary files come back as
+// "-\t-" from git and are skipped.
+ipcMain.handle('git:diffStats', (_event, repoPath: string) => {
+  const empty: Record<string, { added: number; deleted: number }> = {}
+  if (!repoPath || typeof repoPath !== 'string' || !isAbsolute(repoPath)) return empty
+  try { if (!statSync(repoPath).isDirectory()) return empty } catch { return empty }
+
+  try {
+    const out = execSync('git diff --numstat HEAD', {
+      cwd: repoPath, encoding: 'utf8', timeout: 3000,
+    })
+    const result: Record<string, { added: number; deleted: number }> = {}
+    for (const line of out.split('\n')) {
+      const parts = line.split('\t')
+      if (parts.length < 3) continue
+      if (parts[0] === '-' || parts[1] === '-') continue
+      const added = parseInt(parts[0], 10)
+      const deleted = parseInt(parts[1], 10)
+      const filePath = parts.slice(2).join('\t').trim()
+      if (filePath && !isNaN(added) && !isNaN(deleted)) {
+        result[filePath] = { added, deleted }
+      }
+    }
+    return result
+  } catch {
+    return empty
+  }
+})
+
 // Clone a GitHub or GitLab repo into ~/RavenProjects/<name> (or a chosen parent dir)
 ipcMain.handle('git:clone', async (_event, cloneUrl: string, repoName: string, parentDir?: string) => {
   // Validate URL host. Even with strict validation we use execFile (no shell)
